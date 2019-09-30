@@ -7,7 +7,7 @@ You will also need to restart the PI after the script finishes running.
 You should format the usb drive before executing this script, which can be done with the following commands:
 ```
 sudo apt-get install dosfstools
-sudo mkfs.vfat /dev/sda1 -n USB
+sudo mkfs.vfat {{path_to_drive}} -n USB
 ```
 
 ## Prerequisites
