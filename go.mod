@@ -1,3 +1,3 @@
-module raspi_network_share_setup.go
+module raspiNetworkShareSetup.go
 
 go 1.13
