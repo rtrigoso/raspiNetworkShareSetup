@@ -77,6 +77,11 @@ func main() {
 		return
 	}
 
+	err = getLocalIpAddress()
+	if err != nil {
+		return
+	}
+
 	err = createMountDirectory()
 	if err != nil {
 		return
@@ -154,15 +159,18 @@ func getLocalIpAddress() error {
 }
 
 func makeMntDirAccessible() error {
+	fmt.Printf("using ip %s\n", localIP.String())
+
 	ipv4Mask := net.CIDRMask(24, 32)
 	ip := localIP.Mask(ipv4Mask).String() + "/24"
 	expLine := mntDir + " " + ip + "(rw,sync)"
 
-	fmt.Printf("making %s directory accessible on %s\n", mntDir, ip)
+	fmt.Printf("MANUAL STEP: to make the mount accessible, append the following line to the /etc/exports file:\n%s\n", expLine)
 
-	err = appendLineToFile("/etc/exports", expLine)
-	if err != nil {
-		return err
+	var c string
+	for c != "y" {
+		println("Input \"y\" to continue:")
+		_, err = fmt.Scanf("%s", &c)
 	}
 
 	fmt.Printf("enabling rpcbind \n")
@@ -187,7 +195,9 @@ func setupSMBConf() error {
 	}
 
 	cmd := exec.Command("/etc/init.d/samba", "restart")
-	err = cmd.Run()
+	output, err := cmd.Output()
+
+	fmt.Printf("%s\n", output)
 
 	return err
 }
@@ -203,9 +213,12 @@ func createMountDirectory() error {
 	}
 
 	fstabLine := *d + " " + mntDir + " auto defaults,user 0 1"
-	err = appendLineToFile("/etc/fstab", fstabLine)
-	if err != nil {
-		return err
+	fmt.Printf("MANUAL STEP: to automatically mount the drive, append the following line to the /etc/fstab file:\n%s\n", fstabLine)
+
+	var c string
+	for c != "y" {
+		println("Input \"y\" to continue:")
+		_, err = fmt.Scanf("%s", &c)
 	}
 
 	return err
@@ -223,13 +236,13 @@ func appendLineToFile(file string, line string) error {
 	if !fileExists(file) {
 		_, err := os.Create(file)
 		if err != nil {
-			return err
+			return errors.New(fmt.Sprintf("could not create file %s: %v", file, err.Error()))
 		}
 	}
 
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("could not read file: %s: %v", file, err.Error()))
 	}
 
 	s := string(b)
@@ -239,14 +252,13 @@ func appendLineToFile(file string, line string) error {
 
 	f, err := os.Open(file)
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("could not open file: %s: %v", file, err.Error()))
 	}
 
 	defer f.Close()
-
 	_, err = f.WriteString(line)
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("could not write to file: %s: %v", file, err.Error()))
 	}
 
 	return nil
