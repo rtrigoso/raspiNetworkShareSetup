@@ -3,6 +3,13 @@ This script configures a network share drive on a raspberry pi. It requires sudo
 You can run the following command to get the drive path required for the `-d` option: `lsblk -f`
 You will also need to restart the PI after the script finishes running.
 
+## Format Drive
+You should format the usb drive before executing this script, which can be done with the following commands:
+```
+sudo apt-get install dosfstools
+sudo mkfs.vfat {{path_to_drive}} -n USB
+```
+
 ## Prerequisites
 The script will install the following prerequisites:
 - nfs-server
